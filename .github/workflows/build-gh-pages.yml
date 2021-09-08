@@ -4,61 +4,56 @@ name: Build and deploy to GH Pages
 
 on:
   push:
-  workflow_dispatch:
-    inputs:
-      # name:
-      #   description: 'Commit message on 'gh-pages'
-      #   required: true
-      #   default: 'Mona the Octocat'
-      home:
-        description: 'location'
-        required: false
-        default: 'The Octoverse'
+    # branches:
+    #   - main-gh-pages
 
 jobs:
   build-gh-pages:
-    # Only run for branches ending with `gh-pages`
-    #if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: 📂 Checkout branch
+      - name: "📂 Checkout branch"
         uses: actions/checkout@v2
 
         # include the lines below if you are using jekyll-last-modified-at
         # or if you would otherwise need to fetch the full commit history
         # however this may be very slow for large repositories!
         # with:
-        # fetch-depth: '0'
-      - name: 💎 Setup ruby
+        #   fetch-depth: '0'
+
+      - name: "💎 Setup ruby"
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.7.3
 
-      # Install dependencies for https://github.com/zhustec/jekyll-diagrams
-      - uses: actions/setup-java@v2
+      # ----- Install various dependencies for https://github.com/zhustec/jekyll-diagrams
+      # Java is needed for plantuml
+      - name: "Setup Java"
+        uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
           java-version: '11'
-      - uses: actions/setup-python@v1
-      # Also provides node12. node is needed by mermaid
-      # Use same version as https://github.com/limjh16/jekyll-action-ts/blob/master/action.yml#L32
-      - name: Setup Graphviz
+      # Also provides node12, which is needed by mermaid
+      # node12 is also used by https://github.com/limjh16/jekyll-action-ts/blob/master/action.yml#L32
+      - name: "Install Graphviz"
         uses: ts-graphviz/setup-graphviz@v1
-      # node is needed by mermaid
+      # node is needed by mermaid and is provided by ts-graphviz, so don't need to explicitly setup-node
       # - uses: actions/setup-node@v2
       #   with:
       #     node-version: '12'
-      - uses: BSFishy/pip-action@v1
+      - name: 'Install Node diagramming tools'
+        run: |
+          npm install -g mermaid.cli nomnoml state-machine-cat wavedrom-cli
+      - name: "Setup Python"
+        uses: actions/setup-python@v1
+      - name: "Install Python diagramming tools"
+        uses: BSFishy/pip-action@v1
         with:
           packages: |
             blockdiag
             seqdiag
             nwdiag
-      - name: 'Install mermaid, nomnoml, state-machine-cat, and wavedrom-cli tools'
-        run: |
-          npm install -g mermaid.cli nomnoml state-machine-cat wavedrom-cli
 
-      - name: 🔨 Install dependencies & build Jekyll site
+      - name: "🔨 Build Jekyll site"
         uses: limjh16/jekyll-action-ts@v2
         with:
           ### Enables caching. Similar to https://github.com/actions/cache.
@@ -91,7 +86,7 @@ jobs:
           #
           make build_subsites
 
-      - name: 🚀 Deploy to gh-pages
+      - name: "🚀 Deploy to gh-pages"
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
