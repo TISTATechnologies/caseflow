@@ -26,7 +26,7 @@ if [[ $1 == "-h" ]]; then
   exit 0
 fi
 
-if ! aws s3 ls --region us-gov-west-1 s3://shared-s3/dsva-appeals/facols/ > /dev/null ; then
+if ! aws s3 ls --region us-east-1 s3://shared-s3/dsva-appeals/facols/ > /dev/null ; then
   echo "Please run issue_mfa.sh first"
   exit 1
 fi
@@ -55,7 +55,7 @@ build(){
   cp $parent_dir/Dockerfile $parent_dir/setup_vacols.sql $parent_dir/vacols_copy_* $build_facols_dir
 
   echo -e "\tDownloading FACOLS Dependencies..."
-  aws s3 sync --quiet --region us-gov-west-1 s3://shared-s3/dsva-appeals/facols/ $build_facols_dir
+  aws s3 sync --quiet --region us-east-1 s3://shared-s3/dsva-appeals/facols/ $build_facols_dir
 
   echo -e "\tChecking if Instant Client has been downloaded"
   if [ $? -eq 0 ]; then
@@ -91,12 +91,12 @@ build(){
 }
 
 push(){
-  aws ecr get-login-password --region us-gov-west-1 | docker login --username AWS --password-stdin 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com
+  aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 357771246612.dkr.ecr.us-east-1.amazonaws.com
   docker tag vacols_db:latest vacols_db:${today}
-  docker tag vacols_db:${today} 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com/facols:${today}
-  docker tag vacols_db:latest 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com/facols:latest
-  if docker push 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com/facols:${today} ; then
-    docker push 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com/facols:latest
+  docker tag vacols_db:${today} 357771246612.dkr.ecr.us-east-1.amazonaws.com/facols:${today}
+  docker tag vacols_db:latest 357771246612.dkr.ecr.us-east-1.amazonaws.com/facols:latest
+  if docker push 357771246612.dkr.ecr.us-east-1.amazonaws.com/facols:${today} ; then
+    docker push 357771246612.dkr.ecr.us-east-1.amazonaws.com/facols:latest
     echo "${bold}Success. ${normal}The latest docker image has been pushed."
   else
     echo "${bold}Failed to Upload. ${normal}Probably you don't have permissions to do this. Ask the DevOps Team please"
@@ -107,7 +107,7 @@ push(){
 download(){
   # get circleci latest image from this same repo
   facols_image=$(cat ${THIS_SCRIPT_DIR}/../../.circleci/config.yml| grep -m 1 facols | awk '{print $3}')
-  aws ecr get-login-password --region us-gov-west-1 | docker login --username AWS --password-stdin 008577686731.dkr.ecr.us-gov-west-1.amazonaws.com
+  aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 357771246612.dkr.ecr.us-east-1.amazonaws.com
   docker pull $facols_image
   docker tag $facols_image vacols_db:latest
 }
